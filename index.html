@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>真香！真好吃 - 辦公室揪團點餐系統</title>
+    <title>🍱 真香！真好吃 - 辦公室揪團點餐系統</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍱</text></svg>">
     
     <style>
         :root {
@@ -99,7 +101,7 @@
 <body>
 
 <div class="container">
-    <h1>真香！真好吃</h1>
+    <h1>🍱 真香！真好吃</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchPage('order-page')">🛒 大家點餐區</div>
@@ -107,6 +109,7 @@
         <div class="tab" onclick="switchPage('summary-page')">📊 訂單大統計</div>
     </div>
 
+    <!-- 頁面 1：大家點餐區 -->
     <div id="order-page" class="page active">
         <div class="front-menu-zone" id="frontMenuDisplayZone" style="display: none;">
             <h4 style="margin: 0 0 5px 0; color: #b37400; font-size: 18px; text-align: center;">📢 今日開團菜單一覽</h4>
@@ -117,4 +120,407 @@
         <div style="margin-bottom: 15px; text-align: center; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
             <button type="button" class="btn-success" style="background:#ff9f1c; box-shadow: 0 4px 0px #cc7a00;" onclick="renderMenuCards('breakfast')">🍞 早餐</button>
             <button type="button" class="btn-success" style="background:#4361ee; box-shadow: 0 4px 0px #1d3bbb;" onclick="renderMenuCards('lunch')">🍛 午餐</button>
-            <button type="button" class="btn-success" style="background:#2ec4b6; box-shadow: 0
+            <button type="button" class="btn-success" style="background:#2ec4b6; box-shadow: 0 4px 0px #1fa396;" onclick="renderMenuCards('tea')">🍰 下午茶</button>
+            <button type="button" class="btn-success" style="background:#9b5de5; box-shadow: 0 4px 0px #773bb1;" onclick="renderMenuCards('drink')">🥤 飲料</button>
+            <button type="button" class="btn-success" style="background:#718096; box-shadow: 0 4px 0 #4a5568;" onclick="renderMenuCards('all')">顯示全部</button>
+        </div>
+
+        <div class="menu-grid" id="menuDisplayZone"></div>
+
+        <h3 style="margin-top: 30px;">2. 填寫點餐資料</h3>
+        <div class="form-section">
+            <div class="form-group">
+                <label for="orderName">👶 您的名字：</label>
+                <input type="text" id="orderName" placeholder="例如：野原新之助">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="orderItem">🍔 品項名稱：</label>
+                    <input type="text" id="orderItem" placeholder="點擊上方按鈕自動填寫，或手動輸入">
+                </div>
+                <div class="form-group">
+                    <label for="orderPrice">💰 金額 (元)：</label>
+                    <input type="number" id="orderPrice" placeholder="金額">
+                </div>
+            </div>
+            <button type="button" class="btn-primary" onclick="submitOrder()">確認送出點餐 🚀</button>
+        </div>
+    </div>
+
+    <!-- 頁面 2：主辦人建菜單 -->
+    <div id="menu-page" class="page">
+        <div class="admin-two-column">
+            <div class="admin-column-left">
+                <h3>📸 第一步：上傳新菜單傳單</h3>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="menuImageTitle">1. 傳單名稱：</label>
+                        <input type="text" id="menuImageTitle" placeholder="例如：50嵐夏季、麥當勞">
+                    </div>
+                    <div class="form-group">
+                        <label for="menuImageCat">2. 分類歸屬：</label>
+                        <select id="menuImageCat">
+                            <option value="breakfast">🍞 早餐</option>
+                            <option value="lunch" selected>🍛 午餐</option>
+                            <option value="tea">🍰 下午茶</option>
+                            <option value="drink">🥤 飲料</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="menuImageInput">3. 選擇相片檔案：</label>
+                        <input type="file" id="menuImageInput" accept="image/*" onchange="handleImageUpload(this)">
+                    </div>
+                </div>
+
+                <h3>📁 已上傳菜單庫 (可同時勾選啟用)</h3>
+                <div class="admin-history-list" id="adminHistoryZone"></div>
+            </div>
+            
+            <div class="admin-column-right">
+                <h3>➕ 第二步：建立快速點餐快捷鈕</h3>
+                <div class="form-section" style="min-height: 290px;">
+                    <div class="form-group">
+                        <label for="menuCat">餐點按鈕分類：</label>
+                        <select id="menuCat">
+                            <option value="breakfast">🍞 早餐</option>
+                            <option value="lunch" selected>🍛 午餐</option>
+                            <option value="tea">🍰 下午茶</option>
+                            <option value="drink">🥤 飲料</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="menuItemName">品項名稱：</label>
+                            <input type="text" id="menuItemName" placeholder="例如：蜜香紅茶">
+                        </div>
+                        <div class="form-group">
+                            <label for="menuItemPrice">金額 (元)：</label>
+                            <input type="number" id="menuItemPrice" placeholder="例如：40">
+                        </div>
+                    </div>
+                    <button type="button" class="btn-primary" style="background-color: #ff9f1c; box-shadow: 0 4px 0px #cc7a00; margin-top: 5px;" onclick="addMenuItem()">新增到快速按鈕 ✨</button>
+                </div>
+            </div>
+        </div>
+
+        <h3>📋 目前已建立的快速按鈕一覽</h3>
+        <table>
+            <thead>
+                <tr><th>分類</th><th>品項名稱</th><th>金額</th><th>操作</th></tr>
+            </thead>
+            <tbody id="menuTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- 頁面 3：訂單總計 -->
+    <div id="summary-page" class="page">
+        <h3>📊 相同品項自動統計</h3>
+        <table>
+            <thead>
+                <tr><th>統計品項 (金額)</th><th>總數量</th><th>小計金額</th></tr>
+            </thead>
+            <tbody id="aggTableBody"></tbody>
+        </table>
+
+        <h3>👥 每人點餐明細</h3>
+        <table>
+            <thead>
+                <tr><th>點餐人</th><th>品項</th><th>金額</th><th>操作</th></tr>
+            </thead>
+            <tbody id="detailTableBody"></tbody>
+        </table>
+
+        <div class="total-box" id="totalAmountBox">總計金額：0 元</div>
+        <button type="button" class="btn-danger" style="margin-top: 20px; width: 100%; padding: 12px;" onclick="clearAllOrders()">⚠️ 清空本次所有人點餐數據</button>
+    </div>
+</div>
+
+<script>
+// 初始化資料
+let menuList = JSON.parse(localStorage.getItem('officeMenuList')) || [
+    { id: 1, cat: 'lunch', name: '排骨便當', price: 100 },
+    { id: 2, cat: 'drink', name: '烏龍綠茶', price: 35 }
+];
+let orderList = JSON.parse(localStorage.getItem('officeOrderList')) || [];
+let imageHistory = JSON.parse(localStorage.getItem('officeImageHistory')) || [];
+let activeImageIds = JSON.parse(localStorage.getItem('officeActiveImgIds')) || [];
+
+window.onload = function() {
+    renderMenuCards('all');
+    renderMenuTable();
+    renderAdminHistoryList();
+    renderFrontMenu();
+};
+
+// 切換分頁核心功能
+function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    
+    document.getElementById(pageId).classList.add('active');
+    
+    // 尋找被點擊的對應 Tab 標籤
+    const tabs = document.querySelectorAll('.tab');
+    if (pageId === 'order-page') tabs[0].classList.add('active');
+    if (pageId === 'menu-page') tabs[1].classList.add('active');
+    if (pageId === 'summary-page') {
+        tabs[2].classList.add('active');
+        generateSummary();
+    }
+}
+
+function getCatName(cat) {
+    switch(cat) {
+        case 'breakfast': return '🍞 早餐';
+        case 'lunch': return '🍛 午餐';
+        case 'tea': return '🍰 下午茶';
+        case 'drink': return '🥤 飲料';
+        default: return '其他';
+    }
+}
+
+// 圖片處理邏輯
+function handleImageUpload(input) {
+    const titleInput = document.getElementById('menuImageTitle');
+    const catSelect = document.getElementById('menuImageCat');
+    let title = titleInput.value.trim() || "未命名菜單 (" + new Date().toLocaleDateString() + ")";
+    let selectedCat = catSelect.value;
+    
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            const newImgObj = {
+                id: 'img_' + Date.now(),
+                title: title,
+                cat: selectedCat, 
+                data: e.target.result 
+            };
+            imageHistory.push(newImgObj);
+            localStorage.setItem('officeImageHistory', JSON.stringify(imageHistory));
+            titleInput.value = '';
+            input.value = '';
+            renderAdminHistoryList();
+            alert(`📸 傳單「${title}」已上傳！請在下方列表點擊【🟢 啟用】來展示給同事。`);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function renderAdminHistoryList() {
+    const zone = document.getElementById('adminHistoryZone');
+    zone.innerHTML = '';
+    if(imageHistory.length === 0) {
+        zone.innerHTML = '<p style="text-align:center; color:#a0aec0; font-size:13px; padding:20px;">目前菜單庫空空如也！</p>';
+        return;
+    }
+    imageHistory.forEach(img => {
+        const isEnabled = activeImageIds.includes(img.id);
+        let div = document.createElement('div');
+        div.className = `history-item ${isEnabled ? 'enabled' : ''}`;
+        div.innerHTML = `
+            <div style="text-align:left; max-width:60%;">
+                <span style="font-weight:bold; word-break:break-all; color:#4a3728;">${img.title}</span>
+                <span class="status-badge ${isEnabled ? 'status-on' : 'status-off'}">${isEnabled ? '展示中' : '未啟用'}</span>
+                <small style="color:#888; display:block; font-size:11px; margin-top:2px;">分類：${getCatName(img.cat)}</small>
+            </div>
+            <div style="display:flex; gap:5px;">
+                <button type="button" class="btn-success" style="font-size:12px; padding:6px 10px; box-shadow:none; background:${isEnabled ? '#718096':'#2ec4b6'}" onclick="toggleEnableImage('${img.id}')">
+                    ${isEnabled ? '📴 卸載' : '🟢 啟用'}
+                </button>
+                <button type="button" class="btn-danger" style="font-size:12px; padding:6px 10px; box-shadow:none;" onclick="deleteAdminImage('${img.id}')">刪除</button>
+            </div>
+        `;
+        zone.appendChild(div);
+    });
+}
+
+function toggleEnableImage(id) {
+    if (activeImageIds.includes(id)) {
+        activeImageIds = activeImageIds.filter(activeId => activeId !== id);
+    } else {
+        activeImageIds.push(id);
+    }
+    localStorage.setItem('officeActiveImgIds', JSON.stringify(activeImageIds));
+    renderAdminHistoryList();
+    renderFrontMenu();
+}
+
+function deleteAdminImage(id) {
+    if(confirm('確定要永久刪除這張菜單照片嗎？')) {
+        imageHistory = imageHistory.filter(i => i.id !== id);
+        localStorage.setItem('officeImageHistory', JSON.stringify(imageHistory));
+        activeImageIds = activeImageIds.filter(activeId => activeId !== id);
+        localStorage.setItem('officeActiveImgIds', JSON.stringify(activeImageIds));
+        renderAdminHistoryList();
+        renderFrontMenu();
+    }
+}
+
+function renderFrontMenu() {
+    const mainZone = document.getElementById('frontMenuDisplayZone');
+    const container = document.getElementById('frontMenuImagesContainer');
+    container.innerHTML = '';
+    let enabledImages = imageHistory.filter(img => activeImageIds.includes(img.id));
+    if(enabledImages.length === 0) {
+        mainZone.style.display = 'none';
+        return;
+    }
+    enabledImages.forEach(activeImg => {
+        let card = document.createElement('div');
+        card.className = 'single-front-menu-card';
+        card.innerHTML = `
+            <div style="font-weight:bold; margin-bottom:8px; color:#d9381e; font-size:16px;">
+                📢 團購店家：[${getCatName(activeImg.cat)}] ${activeImg.title}
+            </div>
+            <img src="${activeImg.data}" alt="${activeImg.title}">
+        `;
+        container.appendChild(card);
+    });
+    mainZone.style.display = 'block';
+}
+
+// 快速點餐按鈕邏輯
+function renderMenuCards(filter) {
+    const zone = document.getElementById('menuDisplayZone');
+    zone.innerHTML = '';
+    let filtered = menuList;
+    if (filter !== 'all') filtered = menuList.filter(m => m.cat === filter);
+    if(filtered.length === 0) {
+        zone.innerHTML = '<p style="color:#a0aec0; grid-column: 1/-1; text-align:center;">此分類目前無快速按鈕，可以直接手動輸入文字點餐喔！</p>';
+        return;
+    }
+    filtered.forEach(item => {
+        let card = document.createElement('div');
+        card.className = 'menu-card';
+        card.innerHTML = `
+            <span class="category-badge cat-${item.cat}">${getCatName(item.cat)}</span>
+            <h4 style="margin:5px 0;">${item.name}</h4>
+            <div class="price" style="font-weight:bold; color:#fb8500; margin-bottom:8px;">$${item.price}</div>
+            <button type="button" class="btn-success" style="font-size:13px; padding:6px 14px; width:100%; box-shadow: 0 2px 0 #1fa396;" onclick="selectToOrder('${item.name}', ${item.price})">選這項 😋</button>
+        `;
+        zone.appendChild(card);
+    });
+}
+
+function selectToOrder(name, price) {
+    document.getElementById('orderItem').value = name;
+    document.getElementById('orderPrice').value = price;
+    document.getElementById('orderName').focus();
+}
+
+function submitOrder() {
+    const name = document.getElementById('orderName').value.trim();
+    const item = document.getElementById('orderItem').value.trim();
+    const price = parseInt(document.getElementById('orderPrice').value);
+    
+    if(!name || !item || isNaN(price)) {
+        alert('請填完整姓名、品項與正確金額喔！');
+        return;
+    }
+    
+    orderList.push({ id: Date.now(), name: name, item: item, price: price });
+    localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+    
+    document.getElementById('orderItem').value = '';
+    document.getElementById('orderPrice').value = '';
+    alert('🎉 點餐成功！可以去訂單大統計查看結果。');
+}
+
+// 後台快速按鈕管理
+function addMenuItem() {
+    const cat = document.getElementById('menuCat').value;
+    const name = document.getElementById('menuItemName').value.trim();
+    const price = parseInt(document.getElementById('menuItemPrice').value);
+    
+    if(!name || isNaN(price)) {
+        alert('請輸入正確的品項名稱與金額！');
+        return;
+    }
+    
+    menuList.push({ id: Date.now(), cat: cat, name: name, price: price });
+    localStorage.setItem('officeMenuList', JSON.stringify(menuList));
+    
+    document.getElementById('menuItemName').value = '';
+    document.getElementById('menuItemPrice').value = '';
+    renderMenuTable();
+    renderMenuCards('all');
+    alert('✨ 快速點餐快捷鈕新增完成！');
+}
+
+function renderMenuTable() {
+    const tbody = document.getElementById('menuTableBody');
+    tbody.innerHTML = '';
+    menuList.forEach(m => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span class="category-badge cat-${m.cat}">${getCatName(m.cat)}</span></td>
+            <td><b>${m.name}</b></td>
+            <td>$${m.price}</td>
+            <td><button type="button" class="btn-danger" style="padding:4px 8px; font-size:12px; box-shadow:none;" onclick="deleteMenuItem(${m.id})">刪除</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function deleteMenuItem(id) {
+    menuList = menuList.filter(m => m.id !== id);
+    localStorage.setItem('officeMenuList', JSON.stringify(menuList));
+    renderMenuTable();
+    renderMenuCards('all');
+}
+
+// 統計頁面數據邏輯
+function generateSummary() {
+    const aggTbody = document.getElementById('aggTableBody');
+    const detailTbody = document.getElementById('detailTableBody');
+    aggTbody.innerHTML = '';
+    detailTbody.innerHTML = '';
+    
+    let total = 0;
+    let agg = {};
+    
+    orderList.forEach(o => {
+        total += o.price;
+        let key = `${o.item} ($${o.price})`;
+        agg[key] = (agg[key] || 0) + 1;
+        
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><b>${o.name}</b></td>
+            <td>${o.item}</td>
+            <td>$${o.price}</td>
+            <td><button type="button" class="btn-danger" style="padding:4px 8px; font-size:12px; box-shadow:none;" onclick="deleteOrder(${o.id})">作廢</button></td>
+        `;
+        detailTbody.appendChild(tr);
+    });
+    
+    for(let k in agg) {
+        let priceMatch = k.match(/\$(\d+)\)/);
+        let singlePrice = priceMatch ? parseInt(priceMatch[1]) : 0;
+        let count = agg[k];
+        let subtotal = singlePrice * count;
+        
+        let tr = document.createElement('tr');
+        tr.innerHTML = `<td>${k}</td><td>${count} 份</td><td><b>$${subtotal}</b></td>`;
+        aggTbody.appendChild(tr);
+    }
+    
+    document.getElementById('totalAmountBox').innerText = `總計金額：${total} 元`;
+}
+
+function deleteOrder(id) {
+    orderList = orderList.filter(o => o.id !== id);
+    localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+    generateSummary();
+}
+
+function clearAllOrders() {
+    if(confirm('🚨 警告：確定要清空本次所有人的點餐記錄嗎？(此操作不可回復)')) {
+        orderList = [];
+        localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+        generateSummary();
+    }
+}
+</script>
+</body>
+</html>
