@@ -58,7 +58,8 @@
         .form-row { display: flex; gap: 15px; flex-wrap: wrap; }
         .form-row .form-group { flex: 1; min-width: 150px; }
         label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 15px; color: #664d38; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #ffe169; border-radius: 10px; box-sizing: border-box; font-size: 15px; background-color: #fff; }
+        input, select, textarea { width: 100%; padding: 12px; border: 2px solid #ffe169; border-radius: 10px; box-sizing: border-box; font-size: 15px; background-color: #fff; font-family: inherit; }
+        textarea { resize: vertical; min-height: 70px; }
         
         /* 按鈕樣式定義 */
         button, .btn-primary { width: 100%; padding: 12px; background-color: #fb8500; color: white; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 0px #b35f00; transition: all 0.2s; }
@@ -71,25 +72,22 @@
         .btn-danger { background-color: #e63946; box-shadow: 0 4px 0px #b81d2a; width: auto; display: inline-block; color: white; }
         .btn-danger:hover { background-color: #ff4d6d; }
         
-        /* 後台左右雙欄佈局 */
-        .admin-two-column { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px; }
-        .admin-column-left { flex: 1.2; min-width: 320px; }
-        .admin-column-right { flex: 1; min-width: 320px; }
+        /* 後台版面單欄優化 */
+        .admin-layout { max-width: 850px; margin: 0 auto; }
 
-        /* 前台多菜單平行滾動與展示區域 */
+        /* 前台多菜單展示區域 */
         .front-menu-zone { background: #fff; border: 3px solid #ffb703; border-radius: 16px; padding: 20px; margin-bottom: 25px; box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
         .menu-images-flex-container { display: flex; flex-direction: column; gap: 25px; align-items: center; margin-top: 15px; }
-        .single-front-menu-card { width: 100%; max-width: 750px; background: #fffdf5; border: 2px solid #ffe169; border-radius: 14px; padding: 15px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.03); }
-        .single-front-menu-card img { max-width: 100%; max-height: 550px; border-radius: 8px; object-fit: contain; border: 1px solid #ddd; }
+        .single-front-menu-card { width: 100%; max-width: 750px; background: #fffdf5; border: 2px solid #ffe169; border-radius: 14px; padding: 18px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.03); }
+        .single-front-menu-card img { max-width: 100%; max-height: 550px; border-radius: 8px; object-fit: contain; border: 1px solid #ddd; margin-top: 12px; }
+        
+        /* 店家資訊面板 */
+        .shop-info-box { background: #fffde6; border: 1px dashed #fb8500; border-radius: 10px; padding: 10px 15px; margin-bottom: 10px; text-align: left; font-size: 14px; color: #5c4033; }
         
         /* 後台菜單列表樣式 */
-        .admin-history-list { background: #fffcf0; border: 2px solid #ffd166; border-radius: 16px; padding: 15px; max-height: 380px; overflow-y: auto; margin-top: 15px; }
-        .history-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #fff; border: 1px solid #ffe169; border-radius: 8px; margin-bottom: 8px; font-size: 14px; transition: all 0.2s; }
+        .admin-history-list { background: #fffcf0; border: 2px solid #ffd166; border-radius: 16px; padding: 15px; max-height: 500px; overflow-y: auto; margin-top: 15px; }
+        .history-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #fff; border: 1px solid #ffe169; border-radius: 8px; margin-bottom: 12px; font-size: 14px; transition: all 0.2s; flex-wrap: wrap; gap: 10px; }
         .history-item.enabled { border: 2px solid #2ec4b6; background: #e6f9f7; box-shadow: 0 0 8px rgba(46, 196, 182, 0.2); }
-        
-        /* 卡片與表格 */
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
-        .menu-card { background: #fffcf7; border: 2px solid #ffd166; border-radius: 16px; padding: 15px; text-align: center; }
         
         table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px solid #ffd166; }
         th, td { padding: 12px; text-align: left; }
@@ -122,6 +120,7 @@
         <div class="tab" onclick="switchPage('summary-page')">📊 訂單大統計</div>
     </div>
 
+    <!-- 1. 大家點餐區 -->
     <div id="order-page" class="page active">
         
         <div class="front-menu-zone" id="frontMenuDisplayZone" style="display: none;">
@@ -130,19 +129,7 @@
             </div>
         </div>
 
-        <h3>1. 選擇分類快速查看品項</h3>
-        
-        <div style="margin-bottom: 15px; text-align: center; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
-            <button class="btn-success" style="background:#ff9f1c; box-shadow: 0 4px 0px #cc7a00;" onclick="renderMenuCards('breakfast')">🍞 早餐</button>
-            <button class="btn-success" style="background:#4361ee; box-shadow: 0 4px 0px #1d3bbb;" onclick="renderMenuCards('lunch')">🍛 午餐</button>
-            <button class="btn-success" style="background:#2ec4b6; box-shadow: 0 4px 0px #1fa396;" onclick="renderMenuCards('tea')">🍰 下午茶</button>
-            <button class="btn-success" style="background:#9b5de5; box-shadow: 0 4px 0px #773bb1;" onclick="renderMenuCards('drink')">🥤 飲料</button>
-            <button class="btn-success" style="background:#718096; box-shadow: 0 4px 0 #4a5568;" onclick="renderMenuCards('all')">顯示全部</button>
-        </div>
-
-        <div class="menu-grid" id="menuDisplayZone"></div>
-
-        <h3 style="margin-top: 30px;">2. 填寫點餐資料</h3>
+        <h3>填寫點餐資料</h3>
         <div class="form-section">
             <div class="form-group">
                 <label for="orderName">👶 您的名字：</label>
@@ -151,7 +138,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="orderItem">🍔 品項名稱：</label>
-                    <input type="text" id="orderItem" placeholder="點擊上方按鈕自動填寫，或手動輸入">
+                    <input type="text" id="orderItem" placeholder="請對照上方今日菜單輸入想要的餐點">
                 </div>
                 <div class="form-group">
                     <label for="orderPrice">💰 金額 (元)：</label>
@@ -162,15 +149,14 @@
         </div>
     </div>
 
+    <!-- 2. 主辦人建菜單 -->
     <div id="menu-page" class="page">
-        
-        <div class="admin-two-column">
-            
-            <div class="admin-column-left">
-                <h3>📸 第一步：上傳新菜單傳單</h3>
-                <div class="form-section">
+        <div class="admin-layout">
+            <h3>📸 上傳店家新菜單與基本資訊</h3>
+            <div class="form-section">
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="menuImageTitle">1. 傳單名稱：</label>
+                        <label for="menuImageTitle">1. 店家/傳單名稱：</label>
                         <input type="text" id="menuImageTitle" placeholder="例如：50嵐夏季、麥當勞">
                     </div>
                     <div class="form-group">
@@ -182,54 +168,37 @@
                             <option value="drink">🥤 飲料</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="menuImageInput">3. 選擇相片檔案：</label>
-                        <input type="file" id="menuImageInput" accept="image/*" onchange="handleImageUpload(this)">
+                        <label for="menuImagePhone">📞 店家電話 (選填)：</label>
+                        <input type="text" id="menuImagePhone" placeholder="例如：02-23456789">
+                    </div>
+                    <div class="form-group">
+                        <label for="menuImageTime">⏰ 營業時間 (選填)：</label>
+                        <input type="text" id="menuImageTime" placeholder="例如：10:00 - 20:00">
                     </div>
                 </div>
 
-                <h3>📁 已上傳菜單庫 (可同時勾選「多張啟用」一起展示)</h3>
-                <div class="admin-history-list" id="adminHistoryZone">
+                <div class="form-group">
+                    <label for="menuImageNote">📝 備註說明 (選填)：</label>
+                    <textarea id="menuImageNote" placeholder="例如：滿300可外送 / 甜度冰量固定 / 10:30前要訂完"></textarea>
                 </div>
-            </div>
-            
-            <div class="admin-column-right">
-                <h3>➕ 第二步：建立快速點餐快捷鈕</h3>
-                <div class="form-section" style="min-height: 290px;">
-                    <div class="form-group">
-                        <label for="menuCat">餐點按鈕分類：</label>
-                        <select id="menuCat">
-                            <option value="breakfast">🍞 早餐</option>
-                            <option value="lunch" selected>🍛 午餐</option>
-                            <option value="tea">🍰 下午茶</option>
-                            <option value="drink">🥤 飲料</option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="menuItemName">品項名稱：</label>
-                            <input type="text" id="menuItemName" placeholder="例如：蜜香紅茶">
-                        </div>
-                        <div class="form-group">
-                            <label for="menuItemPrice">金額 (元)：</label>
-                            <input type="number" id="menuItemPrice" placeholder="例如：40">
-                        </div>
-                    </div>
-                    <button class="btn-primary" style="background-color: #ff9f1c; box-shadow: 0 4px 0px #cc7a00; margin-top: 5px;" onclick="addMenuItem()">新增到快速按鈕 ✨</button>
+
+                <div class="form-group" style="margin-bottom: 5px;">
+                    <label for="menuImageInput">3. 選擇相片檔案：</label>
+                    <input type="file" id="menuImageInput" accept="image/*" onchange="handleImageUpload(this)">
                 </div>
             </div>
 
+            <h3>📁 已上傳菜單庫 (可同時勾選「多張啟用」一起展示)</h3>
+            <div class="admin-history-list" id="adminHistoryZone">
+            </div>
         </div>
-
-        <h3>📋 目前已建立的快速按鈕一覽</h3>
-        <table>
-            <thead>
-                <tr><th>分類</th><th>品項名稱</th><th>金額</th><th>操作</th></tr>
-            </thead>
-            <tbody id="menuTableBody"></tbody>
-        </table>
     </div>
 
+    <!-- 3. 訂單大統計 -->
     <div id="summary-page" class="page">
         <h3>📊 相同品項自動統計（叫餐專用）</h3>
         <table>
@@ -254,21 +223,13 @@
 
 <script>
 // 資料初始化
-let menuList = JSON.parse(localStorage.getItem('officeMenuList')) || [
-    { id: 1, cat: 'lunch', name: '排骨便當', price: 100 },
-    { id: 2, cat: 'drink', name: '烏龍綠茶', price: 35 }
-];
 let orderList = JSON.parse(localStorage.getItem('officeOrderList')) || [];
 let imageHistory = JSON.parse(localStorage.getItem('officeImageHistory')) || [];
-
-// 從陣列讀取所有已被啟用的傳單 ID 陣列
 let activeImageIds = JSON.parse(localStorage.getItem('officeActiveImgIds')) || [];
 
 window.onload = function() {
-    renderMenuCards('all');
-    renderMenuTable();
     renderAdminHistoryList();
-    renderFrontMenu(); // 同步繪製前台多張大圖展示區
+    renderFrontMenu(); 
 };
 
 function switchPage(pageId) {
@@ -289,13 +250,19 @@ function getCatName(cat) {
     }
 }
 
-// 處理相片上傳
+// 處理相片上傳 (整合新填寫欄位)
 function handleImageUpload(input) {
     const titleInput = document.getElementById('menuImageTitle');
     const catSelect = document.getElementById('menuImageCat');
+    const phoneInput = document.getElementById('menuImagePhone');
+    const timeInput = document.getElementById('menuImageTime');
+    const noteInput = document.getElementById('menuImageNote');
     
     let title = titleInput.value.trim() || "未命名菜單 (" + new Date().toLocaleDateString() + ")";
     let selectedCat = catSelect.value;
+    let phone = phoneInput.value.trim();
+    let time = timeInput.value.trim();
+    let note = noteInput.value.trim();
     
     if (input.files && input.files[0]) {
         var reader = new FileReader();
@@ -304,61 +271,74 @@ function handleImageUpload(input) {
                 id: 'img_' + Date.now(),
                 title: title,
                 cat: selectedCat, 
+                phone: phone,
+                time: time,
+                note: note,
                 data: e.target.result 
             };
             
             imageHistory.push(newImgObj);
             localStorage.setItem('officeImageHistory', JSON.stringify(imageHistory));
             
+            // 清空輸入欄位
             titleInput.value = '';
+            phoneInput.value = '';
+            timeInput.value = '';
+            noteInput.value = '';
             input.value = '';
             
             renderAdminHistoryList();
-            alert(`📸 傳單「${title}」已上傳至菜單庫！請手動點擊下方【🟢 啟用】來發布它。`);
+            alert(`📸 店家「${title}」已成功上傳！請在下方點擊【🟢 啟用】發布至前台。`);
         };
         reader.readAsDataURL(input.files[0]);
     }
 }
 
-// 渲染後台歷史管理清單 (支援多選啟用狀態)
+// 渲染後台菜單庫清單
 function renderAdminHistoryList() {
     const zone = document.getElementById('adminHistoryZone');
     zone.innerHTML = '';
     
     if(imageHistory.length === 0) {
-        zone.innerHTML = '<p style="text-align:center; color:#a0aec0; font-size:13px; padding:20px;">目前菜單庫空空如也，請在上方選擇檔案上傳！</p>';
+        zone.innerHTML = '<p style="text-align:center; color:#a0aec0; font-size:13px; padding:20px;">目前菜單庫空空如也，請在上方填寫資料並上傳！</p>';
         return;
     }
 
     imageHistory.forEach(img => {
-        // 判斷該 ID 是否在已啟用陣列中
         const isEnabled = activeImageIds.includes(img.id);
         let div = document.createElement('div');
         div.className = `history-item ${isEnabled ? 'enabled' : ''}`;
+        
+        // 建立資訊文字串
+        let infoStr = '';
+        if (img.phone) infoStr += `📞 電話: ${img.phone} | `;
+        if (img.time) infoStr += `⏰ 營業: ${img.time} | `;
+        if (img.note) infoStr += `📝 備註: ${img.note}`;
+        if (infoStr.endsWith(' | ')) infoStr = infoStr.slice(0, -3);
+
         div.innerHTML = `
-            <div style="text-align:left; max-width:60%;">
-                <span style="font-weight:bold; word-break:break-all;">${img.title}</span>
+            <div style="text-align:left; flex:1; min-width:260px;">
+                <span style="font-weight:bold; font-size:15px; word-break:break-all;">${img.title}</span>
                 <span class="status-badge ${isEnabled ? 'status-on' : 'status-off'}">${isEnabled ? '展示中' : '未啟用'}</span>
-                <small style="color:#888; display:block; font-size:11px; margin-top:2px;">分類：${getCatName(img.cat)}</small>
+                <small style="color:#718096; display:block; font-size:12px; margin-top:3px;">分類：${getCatName(img.cat)}</small>
+                ${infoStr ? `<small style="color:#a04000; display:block; font-size:12px; margin-top:2px; background:#fffcf2; padding:2px 6px; border-radius:4px;">${infoStr}</small>` : ''}
             </div>
-            <div style="display:flex; gap:5px;">
-                <button class="btn-success" style="font-size:12px; padding:6px 10px; box-shadow:none; background:${isEnabled ? '#718096':'#2ec4b6'}" onclick="toggleEnableImage('${img.id}')">
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn-success" style="font-size:13px; padding:6px 12px; box-shadow:none; width:auto; background:${isEnabled ? '#718096':'#2ec4b6'}" onclick="toggleEnableImage('${img.id}')">
                     ${isEnabled ? '📴 卸載' : '🟢 啟用'}
                 </button>
-                <button class="btn-danger" style="font-size:12px; padding:6px 10px; box-shadow:none;" onclick="deleteAdminImage('${img.id}')">刪除</button>
+                <button class="btn-danger" style="font-size:13px; padding:6px 12px; box-shadow:none; width:auto;" onclick="deleteAdminImage('${img.id}')">刪除</button>
             </div>
         `;
         zone.appendChild(div);
     });
 }
 
-// 切換特定傳單的啟用狀態 (可同時並存多張)
+// 切換特定傳單的啟用狀態
 function toggleEnableImage(id) {
     if (activeImageIds.includes(id)) {
-        // 如果原本已被啟用，則移除它
         activeImageIds = activeImageIds.filter(activeId => activeId !== id);
     } else {
-        // 如果尚未啟用，則將它加進多選啟用清單中
         activeImageIds.push(id);
     }
     localStorage.setItem('officeActiveImgIds', JSON.stringify(activeImageIds));
@@ -368,26 +348,22 @@ function toggleEnableImage(id) {
 
 // 刪除傳單照片
 function deleteAdminImage(id) {
-    if(confirm('確定要從後台永久刪除這張菜單照片嗎？')) {
+    if(confirm('確定要永久刪除這個店家與相片資料嗎？')) {
         imageHistory = imageHistory.filter(i => i.id !== id);
         localStorage.setItem('officeImageHistory', JSON.stringify(imageHistory));
-        
-        // 如果被刪除的曾處於啟用中，也要將其從啟用名單中剔除
         activeImageIds = activeImageIds.filter(activeId => activeId !== id);
         localStorage.setItem('officeActiveImgIds', JSON.stringify(activeImageIds));
-        
         renderAdminHistoryList();
         renderFrontMenu();
     }
 }
 
-// 渲染「大家點餐區」的大傳單照片列 (可複數並排橫向顯示)
+// 渲染「大家點餐區」的大傳單照片與店家基本資訊
 function renderFrontMenu() {
     const mainZone = document.getElementById('frontMenuDisplayZone');
     const container = document.getElementById('frontMenuImagesContainer');
-    container.innerHTML = ''; // 清空舊畫面
+    container.innerHTML = '';
 
-    // 過濾挑選出所有被啟用的圖片物件
     let enabledImages = imageHistory.filter(img => activeImageIds.includes(img.id));
 
     if(enabledImages.length === 0) {
@@ -395,51 +371,31 @@ function renderFrontMenu() {
         return;
     }
 
-    // 將所有被啟用的傳單卡片渲染印到前台
     enabledImages.forEach(activeImg => {
         let card = document.createElement('div');
         card.className = 'single-front-menu-card';
+        
+        // 生成前台店家詳細資訊 HTML
+        let infoHtml = '';
+        if (activeImg.phone || activeImg.time || activeImg.note) {
+            infoHtml = `<div class="shop-info-box">`;
+            if (activeImg.phone) infoHtml += `<div><b>📞 店家電話：</b>${activeImg.phone}</div>`;
+            if (activeImg.time) infoHtml += `<div><b>⏰ 營業時間：</b>${activeImg.time}</div>`;
+            if (activeImg.note) infoHtml += `<div style="margin-top:2px; color:#c70039;"><b>📝 備註說明：</b>${activeImg.note}</div>`;
+            infoHtml += `</div>`;
+        }
+
         card.innerHTML = `
-            <div style="font-weight:bold; margin-bottom:8px; color:#d9381e; font-size:16px;">
+            <div style="font-weight:bold; margin-bottom:10px; color:#d9381e; font-size:17px; text-align:left;">
                 店家：[${getCatName(activeImg.cat)}] ${activeImg.title}
             </div>
+            ${infoHtml}
             <img src="${activeImg.data}" alt="${activeImg.title}">
         `;
         container.appendChild(card);
     });
 
     mainZone.style.display = 'block';
-}
-
-// 渲染前台快速點餐按鈕卡片
-function renderMenuCards(filter) {
-    const zone = document.getElementById('menuDisplayZone');
-    zone.innerHTML = '';
-    let filtered = menuList;
-    if (filter !== 'all') filtered = menuList.filter(m => m.cat === filter);
-
-    if(filtered.length === 0) {
-        zone.innerHTML = '<p style="color:#a0aec0; grid-column: 1/-1; text-align:center;">此分類目前無快速按鈕，可以直接手動輸入文字點餐喔！</p>';
-        return;
-    }
-
-    filtered.forEach(item => {
-        let card = document.createElement('div');
-        card.className = 'menu-card';
-        card.innerHTML = `
-            <span class="category-badge cat-${item.cat}">${getCatName(item.cat)}</span>
-            <h4 style="margin:5px 0;">${item.name}</h4>
-            <div class="price" style="font-weight:bold; color:#fb8500; margin-bottom:8px;">$${item.price}</div>
-            <button class="btn-success" style="font-size:13px; padding:6px 14px; width:100%;" onclick="selectToOrder('${item.name}', ${item.price})">選這項 😋</button>
-        `;
-        zone.appendChild(card);
-    });
-}
-
-function selectToOrder(name, price) {
-    document.getElementById('orderItem').value = name;
-    document.getElementById('orderPrice').value = price;
-    document.getElementById('orderName').focus();
 }
 
 function submitOrder() {
@@ -457,37 +413,6 @@ function submitOrder() {
     document.getElementById('orderItem').value = '';
     document.getElementById('orderPrice').value = '';
     alert(`🎉 ${name} 點餐成功！`);
-}
-
-function addMenuItem() {
-    const cat = document.getElementById('menuCat').value;
-    const name = document.getElementById('menuItemName').value.trim();
-    const price = parseInt(document.getElementById('menuItemPrice').value);
-
-    if (!name || isNaN(price)) { return alert('請填入完整名字與金額！'); }
-    menuList.push({ id: Date.now(), cat: cat, name: name, price: price });
-    localStorage.setItem('officeMenuList', JSON.stringify(menuList));
-    document.getElementById('menuItemName').value = '';
-    document.getElementById('menuItemPrice').value = '';
-    renderMenuCards('all');
-    renderMenuTable();
-}
-
-function renderMenuTable() {
-    const tbody = document.getElementById('menuTableBody');
-    tbody.innerHTML = '';
-    menuList.forEach(item => {
-        let tr = document.createElement('tr');
-        tr.innerHTML = `<td>${getCatName(item.cat)}</td><td><b>${item.name}</b></td><td>$${item.price}</td><td><button class="btn-danger" style="padding:4px 10px; font-size:13px;" onclick="deleteMenuItem(${item.id})">刪除</button></td>`;
-        tbody.appendChild(tr);
-    });
-}
-
-function deleteMenuItem(id) {
-    menuList = menuList.filter(m => m.id !== id);
-    localStorage.setItem('officeMenuList', JSON.stringify(menuList));
-    renderMenuCards('all');
-    renderMenuTable();
 }
 
 function generateSummary() {
