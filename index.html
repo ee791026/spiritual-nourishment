@@ -229,7 +229,7 @@
 </div>
 
 <script>
-// 資料初始化
+// 資料初始化 - 確保每次打開網頁都正確載入 LocalStorage 歷史資料[cite: 2]
 let orderList = JSON.parse(localStorage.getItem('officeOrderList')) || [];
 let imageHistory = JSON.parse(localStorage.getItem('officeImageHistory')) || [];
 let activeImageIds = JSON.parse(localStorage.getItem('officeActiveImgIds')) || [];
@@ -409,7 +409,6 @@ function submitOrder() {
         return;
     }
 
-    // 新增時預設 paid 為 false (未付錢)
     orderList.push({ id: Date.now(), name: name, item: item, price: price, paid: false });
     localStorage.setItem('officeOrderList', JSON.stringify(orderList));
     document.getElementById('orderItem').value = '';
@@ -417,7 +416,6 @@ function submitOrder() {
     alert(`🎉 ${name} 點餐成功！`);
 }
 
-// 切換付款狀態
 function togglePaymentStatus(id) {
     orderList = orderList.map(order => {
         if (order.id === id) {
@@ -426,7 +424,7 @@ function togglePaymentStatus(id) {
         return order;
     });
     localStorage.setItem('officeOrderList', JSON.stringify(orderList));
-    generateSummary(); // 重新渲染統計頁面
+    generateSummary();
 }
 
 function generateSummary() {
@@ -455,11 +453,8 @@ function generateSummary() {
         aggTbody.appendChild(tr);
     }
 
-    // 渲染明細，並依據 image_11bbd9.png 在金額欄位後面加上付款狀態按鈕
     orderList.forEach(order => {
         let tr = document.createElement('tr');
-        
-        // 根據 paid 狀態決定顯示的樣式與文字
         let statusBtnHtml = order.paid 
             ? `<button class="btn-status status-paid" onclick="togglePaymentStatus(${order.id})">✅ 已付</button>`
             : `<button class="btn-status status-unpaid" onclick="togglePaymentStatus(${order.id})">❌ 未付</button>`;
