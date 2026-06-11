@@ -72,6 +72,13 @@
         .btn-danger { background-color: #e63946; box-shadow: 0 4px 0px #b81d2a; width: auto; display: inline-block; color: white; }
         .btn-danger:hover { background-color: #ff4d6d; }
         
+        /* 付款狀態微型按鈕 */
+        .btn-status { padding: 4px 10px; font-size: 13px; border-radius: 20px; font-weight: bold; cursor: pointer; border: none; width: auto; display: inline-block; transition: all 0.2s; }
+        .status-unpaid { background-color: #e2e8f0; color: #4a5568; box-shadow: 0 2px 0px #cbd5e0; }
+        .status-unpaid:hover { background-color: #cbd5e0; }
+        .status-paid { background-color: #48bb78; color: white; box-shadow: 0 2px 0px #2f855a; }
+        .status-paid:hover { background-color: #38a169; }
+
         /* 後台版面單欄優化 */
         .admin-layout { max-width: 850px; margin: 0 auto; }
 
@@ -211,7 +218,7 @@
         <h3>👥 每人點餐明細（收錢對帳專用）</h3>
         <table>
             <thead>
-                <tr><th>點餐人</th><th>品項</th><th>金額</th><th>操作</th></tr>
+                <tr><th>點餐人</th><th>品項</th><th>金額</th><th>付款狀態</th><th>操作</th></tr>
             </thead>
             <tbody id="detailTableBody"></tbody>
         </table>
@@ -250,7 +257,7 @@ function getCatName(cat) {
     }
 }
 
-// 處理相片上傳 (整合新填寫欄位)
+// 處理相片上傳
 function handleImageUpload(input) {
     const titleInput = document.getElementById('menuImageTitle');
     const catSelect = document.getElementById('menuImageCat');
@@ -280,7 +287,6 @@ function handleImageUpload(input) {
             imageHistory.push(newImgObj);
             localStorage.setItem('officeImageHistory', JSON.stringify(imageHistory));
             
-            // 清空輸入欄位
             titleInput.value = '';
             phoneInput.value = '';
             timeInput.value = '';
@@ -309,7 +315,6 @@ function renderAdminHistoryList() {
         let div = document.createElement('div');
         div.className = `history-item ${isEnabled ? 'enabled' : ''}`;
         
-        // 建立資訊文字串
         let infoStr = '';
         if (img.phone) infoStr += `📞 電話: ${img.phone} | `;
         if (img.time) infoStr += `⏰ 營業: ${img.time} | `;
@@ -334,7 +339,6 @@ function renderAdminHistoryList() {
     });
 }
 
-// 切換特定傳單的啟用狀態
 function toggleEnableImage(id) {
     if (activeImageIds.includes(id)) {
         activeImageIds = activeImageIds.filter(activeId => activeId !== id);
@@ -346,7 +350,6 @@ function toggleEnableImage(id) {
     renderFrontMenu();
 }
 
-// 刪除傳單照片
 function deleteAdminImage(id) {
     if(confirm('確定要永久刪除這個店家與相片資料嗎？')) {
         imageHistory = imageHistory.filter(i => i.id !== id);
@@ -358,7 +361,6 @@ function deleteAdminImage(id) {
     }
 }
 
-// 渲染「大家點餐區」的大傳單照片與店家基本資訊
 function renderFrontMenu() {
     const mainZone = document.getElementById('frontMenuDisplayZone');
     const container = document.getElementById('frontMenuImagesContainer');
@@ -375,7 +377,6 @@ function renderFrontMenu() {
         let card = document.createElement('div');
         card.className = 'single-front-menu-card';
         
-        // 生成前台店家詳細資訊 HTML
         let infoHtml = '';
         if (activeImg.phone || activeImg.time || activeImg.note) {
             infoHtml = `<div class="shop-info-box">`;
@@ -408,11 +409,24 @@ function submitOrder() {
         return;
     }
 
-    orderList.push({ id: Date.now(), name: name, item: item, price: price });
+    // 新增時預設 paid 為 false (未付錢)
+    orderList.push({ id: Date.now(), name: name, item: item, price: price, paid: false });
     localStorage.setItem('officeOrderList', JSON.stringify(orderList));
     document.getElementById('orderItem').value = '';
     document.getElementById('orderPrice').value = '';
     alert(`🎉 ${name} 點餐成功！`);
+}
+
+// 切換付款狀態
+function togglePaymentStatus(id) {
+    orderList = orderList.map(order => {
+        if (order.id === id) {
+            return { ...order, paid: !order.paid };
+        }
+        return order;
+    });
+    localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+    generateSummary(); // 重新渲染統計頁面
 }
 
 function generateSummary() {
@@ -422,7 +436,7 @@ function generateSummary() {
 
     if (orderList.length === 0) {
         aggTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">目前無人點餐 😭</td></tr>';
-        detailTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">目前無人點餐 😭</td></tr>';
+        detailTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">目前無人點餐 😭</td></tr>';
         document.getElementById('totalAmountBox').innerText = '總計金額：0 元';
         return;
     }
@@ -441,9 +455,22 @@ function generateSummary() {
         aggTbody.appendChild(tr);
     }
 
+    // 渲染明細，並依據 image_11bbd9.png 在金額欄位後面加上付款狀態按鈕
     orderList.forEach(order => {
         let tr = document.createElement('tr');
-        tr.innerHTML = `<td><span style="background:#ffeaee; padding:4px 8px; border-radius:6px; color:#ff477e; font-weight:bold;">${order.name}</span></td><td>${order.item}</td><td>$${order.price}</td><td><button class="btn-danger" style="padding:4px 10px; font-size:13px;" onclick="deleteOrder(${order.id})">刪除</button></td>`;
+        
+        // 根據 paid 狀態決定顯示的樣式與文字
+        let statusBtnHtml = order.paid 
+            ? `<button class="btn-status status-paid" onclick="togglePaymentStatus(${order.id})">✅ 已付</button>`
+            : `<button class="btn-status status-unpaid" onclick="togglePaymentStatus(${order.id})">❌ 未付</button>`;
+
+        tr.innerHTML = `
+            <td><span style="background:#ffeaee; padding:4px 8px; border-radius:6px; color:#ff477e; font-weight:bold;">${order.name}</span></td>
+            <td>${order.item}</td>
+            <td>$${order.price}</td>
+            <td>${statusBtnHtml}</td>
+            <td><button class="btn-danger" style="padding:4px 10px; font-size:13px;" onclick="deleteOrder(${order.id})">刪除</button></td>
+        `;
         detailTbody.appendChild(tr);
     });
     document.getElementById('totalAmountBox').innerText = `總計金額：${grandTotal} 元 😋`;
