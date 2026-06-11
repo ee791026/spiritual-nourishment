@@ -12,36 +12,29 @@
             --primary-color: #ffb703; /* 小新黃 */
             --secondary-color: #fb8500; /* 動感橘 */
             --accent-color: #ffb4a2; /* 妮妮兔粉 */
-            --bg-color: #fffae6; 
-        }
+            --bg-color: #fffae6; }
         body { 
-            font-family: 'Comic Sans MS', 'Chalkboard SE', 'PingFang SC', 'Microsoft JhengHei', sans-serif; 
-            background-color: var(--bg-color); 
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'PingFang SC', 'Microsoft JhengHei', sans-serif; background-color: var(--bg-color); 
             color: #4a3728; 
             padding: 20px;
             background-image: url('https://img.icons8.com/color/96/shin-chan.png');
             background-size: 85px 85px;
             background-repeat: repeat;
-            background-attachment: fixed;
-        }
+            background-attachment: fixed; }
         
         .container { 
-            max-width: 1050px; 
-            margin: 0 auto; 
+            max-width: 1050px; margin: 0 auto; 
             background: rgba(255, 255, 255, 0.95); 
             backdrop-filter: blur(2px);
             padding: 25px; 
             border-radius: 24px; 
-            box-shadow: 0 10px 30px rgba(251,133,0,0.25);
-            border: 5px solid #ffb703;
+            box-shadow: 0 10px 30px rgba(251,133,0,0.25); border: 5px solid #ffb703;
         }
         h1 { 
-            text-align: center; 
-            color: #d9381e; 
+            text-align: center; color: #d9381e; 
             margin-bottom: 25px;
             font-size: 34px;
-            text-shadow: 2px 2px 0px #ffe169;
-        }
+            text-shadow: 2px 2px 0px #ffe169; }
         h3 { color: #e65c00; border-bottom: 3px dashed #ffb703; padding-bottom: 8px; margin-top: 25px;}
         
         /* 分頁標籤 */
@@ -197,17 +190,6 @@
                 </div>
             </div>
 
-            <h3>💾 菜單備份防丟機制 (適合無痕模式/跨設備傳輸)</h3>
-            <div class="form-section" style="background: #f7fafc; border: 2px solid #cbd5e0;">
-                <p style="margin: 0 0 10px 0; font-size: 13px; color: #4a5568;">
-                    💡 <b>提示：</b>如果您在<b>一般視窗</b>上傳好所有菜單，可以點擊下方「產生備份碼」。把那串代碼複製起來，以後就算在<b>無痕模式</b>下點開網頁，只要把代碼貼上點匯入，所有菜單就會立刻一秒還原，不用重新上傳！
-                </p>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-success" style="background:#4a5568; box-shadow: 0 4px 0 #2d3748;" onclick="exportMenuBackup()">📤 產生並複製目前菜單備份碼</button>
-                    <button class="btn-success" style="background:#3182ce; box-shadow: 0 4px 0 #2b6cb0;" onclick="importMenuBackup()">📥 貼上並匯入菜單備份碼</button>
-                </div>
-            </div>
-
             <h3>📁 已上傳菜單庫 (可同時勾選「多張啟用」一起展示)</h3>
             <div class="admin-history-list" id="adminHistoryZone">
             </div>
@@ -237,7 +219,7 @@
 </div>
 
 <script>
-// 資料初始化 - 確保每次打開網頁都正確載入 LocalStorage 歷史資料
+// 資料初始化
 let orderList = JSON.parse(localStorage.getItem('officeOrderList')) || [];
 let imageHistory = JSON.parse(localStorage.getItem('officeImageHistory')) || [];
 let activeImageIds = JSON.parse(localStorage.getItem('officeActiveImgIds')) || [];
@@ -265,7 +247,7 @@ function getCatName(cat) {
     }
 }
 
-// 處理相片上傳
+// 修正：處理相片上傳並加入「自動壓縮功能」，解決 localStorage 容量爆掉導致消失的問題
 function handleImageUpload(input) {
     const titleInput = document.getElementById('menuImageTitle');
     const catSelect = document.getElementById('menuImageCat');
@@ -282,24 +264,244 @@ function handleImageUpload(input) {
     if (input.files && input.files[0]) {
         var reader = new FileReader();
         reader.onload = function (e) {
-            const newImgObj = {
-                id: 'img_' + Date.now(),
-                title: title,
-                cat: selectedCat, 
-                phone: phone,
-                time: time,
-                note: note,
-                data: e.target.result 
+            // 建立一個臨時的圖片物件來進行壓縮
+            var imgElement = new Image();
+            imgElement.src = e.target.result;
+            imgElement.onload = function() {
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext('2d');
+                
+                // 設定壓縮的最大寬度為 1024 像素（足夠看清菜單文字）
+                var maxWidth = 1024;
+                var width = imgElement.width;
+                var height = imgElement.height;
+                
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(imgElement, 0, 0, width, height);
+                
+                // 將圖片壓縮成 JPEG 格式，品質設定為 0.7 (檔案會縮小 90% 以上，但字依然清晰)
+                var compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                
+                const newImgObj = {
+                    id: 'img_' + Date.now(),
+                    title: title,
+                    cat: selectedCat, 
+                    phone: phone,
+                    time: time,
+                    note: note,
+                    data: compressedDataUrl 
+                };
+                
+                try {
+                    imageHistory.push(newImgObj);
+                    localStorage.setItem('officeImageHistory', JSON.stringify(imageHistory));
+                    
+                    titleInput.value = '';
+                    phoneInput.value = '';
+                    timeInput.value = '';
+                    noteInput.value = '';
+                    input.value = '';
+                    
+                    renderAdminHistoryList();
+                    alert(`📸 店家「${title}」已成功上傳並優化儲存！請在下方點擊【🟢 啟用】發布。`);
+                } catch (error) {
+                    alert('⚠️ 儲存失敗！可能是因為您原先累積的其他菜單圖片太多，請先「刪除」舊的菜單再行上傳。');
+                }
             };
-            
-            imageHistory.push(newImgObj);
-            localStorage.setItem('officeImageHistory', JSON.stringify(imageHistory));
-            
-            titleInput.value = '';
-            phoneInput.value = '';
-            timeInput.value = '';
-            noteInput.value = '';
-            input.value = '';
-            
-            renderAdminHistoryList();
-            alert(`📸 店家「${title}」已成功上傳！請
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// 渲染後台菜單庫清單
+function renderAdminHistoryList() {
+    const zone = document.getElementById('adminHistoryZone');
+    zone.innerHTML = '';
+    if(imageHistory.length === 0) {
+        zone.innerHTML = '<p style="text-align:center; color:#a0aec0; font-size:13px; padding:20px;">目前菜單庫空空如也，請在上方填寫資料並上傳！</p>';
+        return;
+    }
+
+    imageHistory.forEach(img => {
+        const isEnabled = activeImageIds.includes(img.id);
+        let div = document.createElement('div');
+        div.className = `history-item ${isEnabled ? 'enabled' : ''}`;
+        
+        let infoStr = '';
+        if (img.phone) infoStr += `📞 電話: ${img.phone} | `;
+        if (img.time) infoStr += `⏰ 營業: ${img.time} | `;
+        if (img.note) infoStr += `📝 備註: ${img.note}`;
+        if (infoStr.endsWith(' | ')) infoStr = infoStr.slice(0, -3);
+
+        div.innerHTML = `
+            <div style="text-align:left; flex:1; min-width:260px;">
+                <span style="font-weight:bold; font-size:15px; word-break:break-all;">${img.title}</span>
+                <span class="status-badge ${isEnabled ? 'status-on' : 'status-off'}">${isEnabled ? '展示中' : '未啟用'}</span>
+                <small style="color:#718096; display:block; font-size:12px; margin-top:3px;">分類：${getCatName(img.cat)}</small>
+                ${infoStr ? `<small style="color:#a04000; display:block; font-size:12px; margin-top:2px; background:#fffcf2; padding:2px 6px; border-radius:4px;">${infoStr}</small>` : ''}
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn-success" style="font-size:13px; padding:6px 12px; box-shadow:none; width:auto; background:${isEnabled ? '#718096':'#2ec4b6'}" onclick="toggleEnableImage('${img.id}')">
+                    ${isEnabled ? '📴 卸載' : '🟢 啟用'}
+                </button>
+                <button class="btn-danger" style="font-size:13px; padding:6px 12px; box-shadow:none; width:auto;" onclick="deleteAdminImage('${img.id}')">刪除</button>
+            </div>
+        `;
+        zone.appendChild(div);
+    });
+}
+
+function toggleEnableImage(id) {
+    if (activeImageIds.includes(id)) {
+        activeImageIds = activeImageIds.filter(activeId => activeId !== id);
+    } else {
+        activeImageIds.push(id);
+    }
+    localStorage.setItem('officeActiveImgIds', JSON.stringify(activeImageIds));
+    renderAdminHistoryList();
+    renderFrontMenu();
+}
+
+function deleteAdminImage(id) {
+    if(confirm('確定要永久刪除這個店家與相片資料嗎？')) {
+        imageHistory = imageHistory.filter(i => i.id !== id);
+        localStorage.setItem('officeImageHistory', JSON.stringify(imageHistory));
+        activeImageIds = activeImageIds.filter(activeId => activeId !== id);
+        localStorage.setItem('officeActiveImgIds', JSON.stringify(activeImageIds));
+        renderAdminHistoryList();
+        renderFrontMenu();
+    }
+}
+
+function renderFrontMenu() {
+    const mainZone = document.getElementById('frontMenuDisplayZone');
+    const container = document.getElementById('frontMenuImagesContainer');
+    container.innerHTML = '';
+
+    let enabledImages = imageHistory.filter(img => activeImageIds.includes(img.id));
+    if(enabledImages.length === 0) {
+        mainZone.style.display = 'none';
+        return;
+    }
+
+    enabledImages.forEach(activeImg => {
+        let card = document.createElement('div');
+        card.className = 'single-front-menu-card';
+        
+        let infoHtml = '';
+        if (activeImg.phone || activeImg.time || activeImg.note) {
+            infoHtml = `<div class="shop-info-box">`;
+            if (activeImg.phone) infoHtml += `<div><b>📞 店家電話：</b>${activeImg.phone}</div>`;
+            if (activeImg.time) infoHtml += `<div><b>⏰ 營業時間：</b>${activeImg.time}</div>`;
+            if (activeImg.note) infoHtml += `<div style="margin-top:2px; color:#c70039;"><b>📝 備註說明：</b>${activeImg.note}</div>`;
+            infoHtml += `</div>`;
+        }
+
+        card.innerHTML = `
+            <div style="font-weight:bold; margin-bottom:10px; color:#d9381e; font-size:17px; text-align:left;">
+                店家：[${getCatName(activeImg.cat)}] ${activeImg.title}
+            </div>
+            ${infoHtml}
+            <img src="${activeImg.data}" alt="${activeImg.title}">
+        `;
+        container.appendChild(card);
+    });
+
+    mainZone.style.display = 'block';
+}
+
+function submitOrder() {
+    const name = document.getElementById('orderName').value.trim();
+    const item = document.getElementById('orderItem').value.trim();
+    const price = parseInt(document.getElementById('orderPrice').value);
+
+    if (!name || !item || isNaN(price)) {
+        alert('請記得填寫名字、品項和金額喔！');
+        return;
+    }
+
+    orderList.push({ id: Date.now(), name: name, item: item, price: price, paid: false });
+    localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+    document.getElementById('orderItem').value = '';
+    document.getElementById('orderPrice').value = '';
+    alert(`🎉 ${name} 點餐成功！`);
+}
+
+function togglePaymentStatus(id) {
+    orderList = orderList.map(order => {
+        if (order.id === id) {
+            return { ...order, paid: !order.paid };
+        }
+        return order;
+    });
+    localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+    generateSummary();
+}
+
+function generateSummary() {
+    const aggTbody = document.getElementById('aggTableBody');
+    const detailTbody = document.getElementById('detailTableBody');
+    aggTbody.innerHTML = ''; detailTbody.innerHTML = '';
+
+    if (orderList.length === 0) {
+        aggTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">目前無人點餐 😭</td></tr>';
+        detailTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">目前無人點餐 😭</td></tr>';
+        document.getElementById('totalAmountBox').innerText = '總計金額：0 元';
+        return;
+    }
+
+    let aggregation = {};
+    let grandTotal = 0;
+    orderList.forEach(order => {
+        let key = `${order.item} (單價: $${order.price})`;
+        if (!aggregation[key]) aggregation[key] = { name: order.item, price: order.price, count: 0 };
+        aggregation[key].count += 1; grandTotal += order.price;
+    });
+    for (let k in aggregation) {
+        let subtotal = aggregation[k].price * aggregation[k].count;
+        let tr = document.createElement('tr');
+        tr.innerHTML = `<td><b>${aggregation[k].name}</b></td><td style="color:#fb8500; font-weight:bold;">${aggregation[k].count} 份</td><td><b>$${subtotal}</b></td>`;
+        aggTbody.appendChild(tr);
+    }
+
+    orderList.forEach(order => {
+        let tr = document.createElement('tr');
+        
+        let statusBtnHtml = order.paid 
+            ? `<button class="btn-status status-paid" onclick="togglePaymentStatus(${order.id})">✅ 已付</button>`
+            : `<button class="btn-status status-unpaid" onclick="togglePaymentStatus(${order.id})">❌ 未付</button>`;
+
+        tr.innerHTML = `
+            <td><span style="background:#ffeaee; padding:4px 8px; border-radius:6px; color:#ff477e; font-weight:bold;">${order.name}</span></td>
+            <td>${order.item}</td>
+            <td>$${order.price}</td>
+            <td>${statusBtnHtml}</td>
+            <td><button class="btn-danger" style="padding:4px 10px; font-size:13px;" onclick="deleteOrder(${order.id})">刪除</button></td>
+        `;
+        detailTbody.appendChild(tr);
+    });
+    document.getElementById('totalAmountBox').innerText = `總計金額：${grandTotal} 元 😋`;
+}
+
+function deleteOrder(id) {
+    orderList = orderList.filter(o => o.id !== id);
+    localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+    generateSummary();
+}
+
+function clearAllOrders() {
+    if (confirm('確定要清空本次點餐的全部數據嗎？')) {
+        orderList = [];
+        localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+        generateSummary();
+    }
+}
+</script>
+</body>
+</html>
