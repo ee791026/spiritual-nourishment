@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍱 真香！真好吃 - 辦公室揪團點餐系統</title>
+    <title>真香！真好吃 - 辦公室揪團點餐系統</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍱</text></svg>">
     
@@ -125,9 +125,9 @@
     <div id="order-page" class="page active">
         
         <div class="front-menu-zone" id="frontMenuDisplayZone" style="display: none;">
-            <h4 style="margin: 0 0 5px 0; color: #b37400; font-size: 18px; text-align: center;">📢 今日開團菜單一覽</h4>
+            <h4 style="margin: 0 0 5px 0; color: #b37400; font-size: 18px; text-align: center;">今日菜單一覽</h4>
             <div class="menu-images-flex-container" id="frontMenuImagesContainer">
-                </div>
+            </div>
         </div>
 
         <h3>1. 選擇分類快速查看品項</h3>
@@ -190,7 +190,7 @@
 
                 <h3>📁 已上傳菜單庫 (可同時勾選「多張啟用」一起展示)</h3>
                 <div class="admin-history-list" id="adminHistoryZone">
-                    </div>
+                </div>
             </div>
             
             <div class="admin-column-right">
@@ -401,7 +401,7 @@ function renderFrontMenu() {
         card.className = 'single-front-menu-card';
         card.innerHTML = `
             <div style="font-weight:bold; margin-bottom:8px; color:#d9381e; font-size:16px;">
-                📢 團購店家：[${getCatName(activeImg.cat)}] ${activeImg.title}
+                店家：[${getCatName(activeImg.cat)}] ${activeImg.title}
             </div>
             <img src="${activeImg.data}" alt="${activeImg.title}">
         `;
