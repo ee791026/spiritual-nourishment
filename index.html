@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>辦公室揪團點餐系統</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #50e3c2;
+            --accent-color: #ff5a5f;
+            --bg-color: #f8fafc;
+        }
+        body { font-family: 'PingFang SC', 'Microsoft JhengHei', sans-serif; background-color: var(--bg-color); color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
+        
+        /* 分頁標籤樣式 */
+        .tabs { display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; background: #edf2f7; border-radius: 8px 8px 0 0; padding: 5px 5px 0 5px; }
+        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-weight: bold; color: #718096; border-radius: 8px 8px 0 0; transition: all 0.3s; }
+        .tab.active { background: white; color: var(--primary-color); border-bottom: 3px solid var(--primary-color); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* 表單樣式 */
+        .form-section { background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .form-group { margin-bottom: 12px; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; color: #4a5568; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        
+        button { padding: 10px 20px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .btn-primary { background-color: var(--primary-color); color: white; width: 100%; }
+        .btn-primary:hover { background-color: #357abd; }
+        .btn-success { background-color: #48bb78; color: white; }
+        .btn-success:hover { background-color: #38a169; }
+        .btn-danger { background-color: var(--accent-color); color: white; padding: 5px 10px; font-size: 13px; }
+        .btn-danger:hover { background-color: #e53e3e; }
+        
+        /* 菜單與點餐卡片 */
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
+        .menu-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); position: relative; }
+        .menu-card h4 { margin: 0 0 8px 0; color: #2d3748; font-size: 16px; }
+        .menu-card .price { color: var(--accent-color); font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+        
+        /* 統計表格 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
+        th { background-color: #f7fafc; color: #4a5568; }
+        .total-box { background: #ebf8ff; border: 1px solid #bee3f8; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; text-align: right; color: #2b6cb0; }
+        
+        /* 分類標籤顏色 */
+        .category-badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; color: white; font-weight: bold; margin-bottom: 5px; }
+        .cat-breakfast { background-color: #ed8936; }
+        .cat-lunch { background-color: #4299e1; }
+        .cat-tea { background-color: #b7791f; }
+        .cat-drink { background-color: #9f7aea; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍱 辦公室揪團點餐系統</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchPage('order-page')">🛒 點餐區</div>
+        <div class="tab" onclick="switchPage('menu-page')">➕ 新增菜單</div>
+        <div class="tab" onclick="switchPage('summary-page')" onclick="generateSummary()">📊 訂單總計</div>
+    </div>
+
+    <div id="order-page" class="page active">
+        <h3>1. 點擊下方現有菜單即可點餐，或在下方自行輸入</h3>
+        
+        <div style="margin-bottom: 15px; text-align: center;">
+            <button class="btn-success" style="background:#ed8936" onclick="filterMenu('breakfast')">🍞 早餐</button>
+            <button class="btn-success" style="background:#4299e1" onclick="filterMenu('lunch')">🍛 午餐</button>
+            <button class="btn-success" style="background:#b7791f" onclick="filterMenu('tea')">🍰 下午茶</button>
+            <button class="btn-success" style="background:#9f7aea" onclick="filterMenu('drink')">🧋 飲料</button>
+            <button class="btn-success" style="background:#718096" onclick="filterMenu('all')">顯示全部</button>
+        </div>
+
+        <div class="menu-grid" id="menuDisplayZone">
+            </div>
+
+        <h3 style="margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 20px;">2. 填寫點餐資料</h3>
+        <div class="form-section">
+            <div class="form-group">
+                <label for="orderName">您的名字（大名）：</label>
+                <input type="text" id="orderName" placeholder="例如：阿明">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="orderItem">品項名稱：</label>
+                    <input type="text" id="orderItem" placeholder="點擊上方菜單會自動帶入，也可自行輸入">
+                </div>
+                <div class="form-group">
+                    <label for="orderPrice">金額 (元)：</label>
+                    <input type="number" id="orderPrice" placeholder="金額">
+                </div>
+            </div>
+            <button class="btn-primary" onclick="submitOrder()">確認送出點餐 🚀</button>
+        </div>
+    </div>
+
+    <div id="menu-page" class="page">
+        <h3>➕ 為大家建立新菜單</h3>
+        <div class="form-section">
+            <div class="form-group">
+                <label for="menuCat">餐點分類：</label>
+                <select id="menuCat">
+                    <option value="breakfast">🍞 早餐</option>
+                    <option value="lunch" selected>🍛 午餐</option>
+                    <option value="tea">🍰 下午茶</option>
+                    <option value="drink">🧋 飲料</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="menuItemName">菜單品項名稱：</label>
+                    <input type="text" id="menuItemName" placeholder="例如：排骨便當、珍珠奶茶">
+                </div>
+                <div class="form-group">
+                    <label for="menuItemPrice">金額 (元)：</label>
+                    <input type="number" id="menuItemPrice" placeholder="例如：100">
+                </div>
+            </div>
+            <button class="btn-primary" style="background-color: #48bb78;" onclick="addMenuItem()">新增到公用菜單 ✨</button>
+        </div>
+
+        <h3>📋 目前菜單一覽</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>分類</th>
+                    <th>品項名稱</th>
+                    <th>金額</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="menuTableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="summary-page" class="page">
+        <h3>📊 相同品項統計（方便訂店家、點數量）</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>統計品項 (金額)</th>
+                    <th>數量</th>
+                    <th>小計金額</th>
+                </tr>
+            </thead>
+            <tbody id="aggTableBody"></tbody>
+        </table>
+
+        <h3>👥 每人點餐詳細明細（方便收錢）</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>點餐人</th>
+                    <th>品項</th>
+                    <th>金額</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="detailTableBody"></tbody>
+        </table>
+
+        <div class="total-box" id="totalAmountBox">總計金額：0 元</div>
+        <button class="btn-danger" style="margin-top: 15px; width: 100%; padding: 12px;" onclick="clearAllOrders()">⚠️ 清空本次所有點餐記錄（開啟新的一團）</button>
+    </div>
+</div>
+
+<script>
+// 初始化資料
+let menuList = JSON.parse(localStorage.getItem('officeMenuList')) || [
+    { id: 1, cat: 'lunch', name: '排骨便當', price: 100 },
+    { id: 2, cat: 'lunch', name: '雞腿便當', price: 110 },
+    { id: 3, cat: 'drink', name: '紅茶拿鐵(大)', price: 60 },
+    { id: 4, cat: 'tea', name: '蜂蜜鬆餅', price: 80 }
+];
+
+let orderList = JSON.parse(localStorage.getItem('officeOrderList')) || [];
+
+window.onload = function() {
+    renderMenuCards('all');
+    renderMenuTable();
+    generateSummary();
+};
+
+// 切換主頁籤
+function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    
+    document.getElementById(pageId).classList.add('active');
+    event.currentTarget.classList.add('active');
+
+    if (pageId === 'summary-page') {
+        generateSummary();
+    }
+}
+
+// 建立分類對應中文
+function getCatName(cat) {
+    switch(cat) {
+        case 'breakfast': return '🍞 早餐';
+        case 'lunch': return '🍛 午餐';
+        case 'tea': return '🍰 下午茶';
+        case 'drink': return '🧋 飲料';
+        default: return '其他';
+    }
+}
+
+// 渲染點餐區的菜單卡片
+function renderMenuCards(filter) {
+    const zone = document.getElementById('menuDisplayZone');
+    zone.innerHTML = '';
+    
+    let filtered = menuList;
+    if (filter !== 'all') {
+        filtered = menuList.filter(m => m.cat === filter);
+    }
+
+    if(filtered.length === 0) {
+        zone.innerHTML = '<p style="color:#a0aec0; grid-column: 1/-1; text-align:center;">此分類目前沒有菜單，可以去「新增菜單」分頁建立喔！</p>';
+        return;
+    }
+
+    filtered.forEach(item => {
+        let card = document.createElement('div');
+        card.className = 'menu-card';
+        card.innerHTML = `
+            <span class="category-badge cat-${item.cat}">${getCatName(item.cat)}</span>
+            <h4>${item.name}</h4>
+            <div class="price">$${item.price}</div>
+            <button class="btn-success" style="font-size:12px; padding:4px 10px;" onclick="selectToOrder('${item.name}', ${item.price})">選擇此項</button>
+        `;
+        zone.appendChild(card);
+    });
+}
+
+function filterMenu(cat) {
+    renderMenuCards(cat);
+}
+
+// 點擊菜單自動帶入輸入框
+function selectToOrder(name, price) {
+    document.getElementById('orderItem').value = name;
+    document.getElementById('orderPrice').value = price;
+    // 滾動到填寫區
+    document.getElementById('orderName').focus();
+}
+
+// 提交點餐
+function submitOrder() {
+    const name = document.getElementById('orderName').value.trim();
+    const item = document.getElementById('orderItem').value.trim();
+    const price = parseInt(document.getElementById('orderPrice').value);
+
+    if (!name || !item || isNaN(price)) {
+        alert('請填寫完整的名字、品項名稱與金額！');
+        return;
+    }
+
+    const newOrder = {
+        id: Date.now(),
+        name: name,
+        item: item,
+        price: price
+    };
+
+    orderList.push(newOrder);
+    localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+
+    // 清空品項輸入，但保留名字（方便同一個人點多個）
+    document.getElementById('orderItem').value = '';
+    document.getElementById('orderPrice').value = '';
+    
+    alert(`🎉 ${name} 的「${item}」點餐成功！`);
+}
+
+// 新增公用菜單
+function addMenuItem() {
+    const cat = document.getElementById('menuCat').value;
+    const name = document.getElementById('menuItemName').value.trim();
+    const price = parseInt(document.getElementById('menuItemPrice').value);
+
+    if (!name || isNaN(price)) {
+        alert('請填入菜單品項名稱與金額！');
+        return;
+    }
+
+    const newItem = { id: Date.now(), cat: cat, name: name, price: price };
+    menuList.push(newItem);
+    localStorage.setItem('officeMenuList', JSON.stringify(menuList));
+
+    document.getElementById('menuItemName').value = '';
+    document.getElementById('menuItemPrice').value = '';
+
+    renderMenuCards('all');
+    renderMenuTable();
+    alert('菜單新增成功！');
+}
+
+// 渲染後台菜單表格
+function renderMenuTable() {
+    const tbody = document.getElementById('menuTableBody');
+    tbody.innerHTML = '';
+    menuList.forEach(item => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${getCatName(item.cat)}</td>
+            <td><b>${item.name}</b></td>
+            <td>$${item.price}</td>
+            <td><button class="btn-danger" onclick="deleteMenuItem(${item.id})">刪除</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function deleteMenuItem(id) {
+    menuList = menuList.filter(m => m.id !== id);
+    localStorage.setItem('officeMenuList', JSON.stringify(menuList));
+    renderMenuCards('all');
+    renderMenuTable();
+}
+
+// 生成訂單統計與明細 (重要核心)
+function generateSummary() {
+    const aggTbody = document.getElementById('aggTableBody');
+    const detailTbody = document.getElementById('detailTableBody');
+    
+    aggTbody.innerHTML = '';
+    detailTbody.innerHTML = '';
+
+    if (orderList.length === 0) {
+        aggTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#a0aec0;">目前還沒有人點餐</td></tr>';
+        detailTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#a0aec0;">目前還沒有人點餐</td></tr>';
+        document.getElementById('totalAmountBox').innerText = '總計金額：0 元';
+        return;
+    }
+
+    // 1. 相同品項統計 (用 "名稱+金額" 當作唯一的 Key 來統計數量)
+    let aggregation = {};
+    let grandTotal = 0;
+
+    orderList.forEach(order => {
+        // 組合 Key 確保一樣名字但不同價錢的會分開算
+        let key = `${order.item} (銀: $${order.price})`;
+        if (!aggregation[key]) {
+            aggregation[key] = { name: order.item, price: order.price, count: 0 };
+        }
+        aggregation[key].count += 1;
+        grandTotal += order.price;
+    });
+
+    for (let k in aggregation) {
+        let subtotal = aggregation[k].price * aggregation[k].count;
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><b>${aggregation[k].name}</b> <span style="color:#718096; font-size:13px;">($${aggregation[k].price}元)</span></td>
+            <td style="color:var(--primary-color); font-weight:bold;">${aggregation[k].count} 份</td>
+            <td><b>$${subtotal}</b></td>
+        `;
+        aggTbody.appendChild(tr);
+    }
+
+    // 2. 個人明細渲染
+    orderList.forEach(order => {
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><mark style="background:#ebf8ff; padding:2px 5px; border-radius:4px;"><b>${order.name}</b></mark></td>
+            <td>${order.item}</td>
+            <td>$${order.price}</td>
+            <td><button class="btn-danger" onclick="deleteOrder(${order.id})">抽單/刪除</button></td>
+        `;
+        detailTbody.appendChild(tr);
+    });
+
+    document.getElementById('totalAmountBox').innerText = `總計金額：${grandTotal} 元`;
+}
+
+// 刪除單筆點餐
+function deleteOrder(id) {
+    orderList = orderList.filter(o => o.id !== id);
+    localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+    generateSummary();
+}
+
+// 清空所有訂單（開新團）
+function clearAllOrders() {
+    if (confirm('確定要清空今天所有人點的餐點資料嗎？（菜單不會被刪除）')) {
+        orderList = [];
+        localStorage.setItem('officeOrderList', JSON.stringify(orderList));
+        generateSummary();
+    }
+}
+</script>
+</body>
+</html>
